@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	books.Duplicate2()
+	books.Fetch()
 }
