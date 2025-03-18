@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	books.SayBookName()
+	books.Duplicate2()
 }
