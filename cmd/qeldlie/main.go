@@ -6,14 +6,10 @@ import (
 )
 
 func main() {
-	a, err := examples.NewFieldElement(9, 19)
+	result, err := examples.CreateSet(7)
+	if err != nil {
+		fmt.Errorf("%v\n", err)
+	}
 
-	if err != nil {
-		fmt.Errorf("error %v", err)
-	}
-	b, err := a.Pow(12)
-	if err != nil {
-		fmt.Errorf("error %v", err)
-	}
-	fmt.Println(b.String())
+	examples.PrintSet(result)
 }

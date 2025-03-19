@@ -12,6 +12,7 @@ type FieldElement struct {
 
 var ErrNoInRange = errors.New("num not in range")
 var ErrNotSameField = errors.New("cannot add nums from different fields")
+var ErrFailedToCreateSet = errors.New("failed to create set")
 
 func NewFieldElement(num, prime int) (*FieldElement, error) {
 	if num >= prime || num < 0 {
@@ -72,4 +73,30 @@ func (f *FieldElement) Pow(exp int) (*FieldElement, error) {
 	}
 
 	return NewFieldElement(result, f.Prime)
+}
+
+func CreateSet(p int) ([]*FieldElement, error) {
+	var result []*FieldElement
+
+	for i := 1; i < p; i++ {
+		a, err := NewFieldElement(i, p)
+
+		if err != nil {
+			return nil, ErrFailedToCreateSet
+		}
+		b, err := a.Pow(p - 1)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, b)
+	}
+	return result, nil
+}
+
+func PrintSet(set []*FieldElement) {
+	fmt.Println("Set: [")
+	for _, elem := range set {
+		fmt.Println(",", elem.String())
+	}
+	fmt.Println("]")
 }
