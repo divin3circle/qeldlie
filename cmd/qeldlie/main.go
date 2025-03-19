@@ -3,17 +3,25 @@ package main
 import (
 	"fmt"
 	"github.com/divin3circle/qeldlie/internal/examples"
-	"os"
 )
 
 func main() {
-	field, err := examples.NewFieldElement(17, 13)
+	a, err := examples.NewFieldElement(5, 13)
+	if err != nil {
+		panic(err)
+	}
+	b, err := examples.NewFieldElement(7, 13)
+	if err != nil {
+		panic(err)
+	}
+	c, err := examples.NewFieldElement(11, 13)
+
+	d, err := a.Sub(b)
 
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "NewFieldElement: %v\n", err)
-		os.Exit(1)
+		fmt.Errorf("error adding %v to %v: %v", b, a, err)
 	}
 
-	fmt.Printf("%s\n", field.String())
-
+	fmt.Println(d.Equal(c))
+	fmt.Println(d.String())
 }

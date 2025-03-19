@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func SayBookName() {
@@ -95,4 +96,38 @@ func Fetch() {
 
 		fmt.Printf("%s\t%s", b, resp.Status)
 	}
+}
+
+func fetch(url string, ch chan<- string) {
+	start := time.Now()
+	resp, err := http.Get(url)
+
+	if err != nil {
+		ch <- fmt.Sprintf("fetch: %v\n", err)
+		return
+	}
+
+	nbytes, err := io.Copy(io.Discard, resp.Body)
+
+	resp.Body.Close()
+	if err != nil {
+		ch <- fmt.Sprintf("fetch error while reading %s: %v\n", url, err)
+	}
+	secs := time.Since(start).Seconds()
+	ch <- fmt.Sprintf("%.2fs elapsed %d bytes received %s\n", secs, nbytes, url)
+}
+
+func FetchAll() {
+	start := time.Now()
+	ch := make(chan string)
+
+	for _, url := range os.Args[1:] {
+		go fetch(url, ch)
+	}
+
+	for range os.Args[1:] {
+		fmt.Println(<-ch)
+	}
+
+	fmt.Printf("%.2fs elapsed\n", time.Since(start).Seconds())
 }
