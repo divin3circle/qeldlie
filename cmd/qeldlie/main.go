@@ -6,22 +6,14 @@ import (
 )
 
 func main() {
-	a, err := examples.NewFieldElement(5, 13)
-	if err != nil {
-		panic(err)
-	}
-	b, err := examples.NewFieldElement(7, 13)
-	if err != nil {
-		panic(err)
-	}
-	c, err := examples.NewFieldElement(11, 13)
-
-	d, err := a.Sub(b)
+	a, err := examples.NewFieldElement(9, 19)
 
 	if err != nil {
-		fmt.Errorf("error adding %v to %v: %v", b, a, err)
+		fmt.Errorf("error %v", err)
 	}
-
-	fmt.Println(d.Equal(c))
-	fmt.Println(d.String())
+	b, err := a.Pow(12)
+	if err != nil {
+		fmt.Errorf("error %v", err)
+	}
+	fmt.Println(b.String())
 }

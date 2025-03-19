@@ -56,3 +56,20 @@ func (f *FieldElement) Sub(other *FieldElement) (*FieldElement, error) {
 	num := (f.Num - other.Num) % f.Prime
 	return NewFieldElement(num, f.Prime)
 }
+
+func (f *FieldElement) Mul(other *FieldElement) (*FieldElement, error) {
+	if f.Prime != other.Prime {
+		return nil, ErrNotSameField
+	}
+	num := (f.Num * other.Num) % f.Prime
+	return NewFieldElement(num, f.Prime)
+}
+
+func (f *FieldElement) Pow(exp int) (*FieldElement, error) {
+	result := 1
+	for i := 0; i < exp; i++ {
+		result = (result * f.Num) % f.Prime
+	}
+
+	return NewFieldElement(result, f.Prime)
+}
