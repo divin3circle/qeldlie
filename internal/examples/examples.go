@@ -94,9 +94,13 @@ func CreateSet(p int) ([]*FieldElement, error) {
 }
 
 func PrintSet(set []*FieldElement) {
-	fmt.Println("Set: [")
-	for _, elem := range set {
-		fmt.Println(",", elem.String())
+	fmt.Print("Set: [")
+	for idx, elem := range set {
+		if idx == len(set)-1 {
+			fmt.Print(elem.String(), "]")
+			return
+		}
+		fmt.Print(elem.String(), ", ")
 	}
 	fmt.Println("]")
 }
