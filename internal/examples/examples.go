@@ -12,10 +12,19 @@ type FieldElement struct {
 	Prime *big.Int
 }
 
+// Point represents a point on an elliptic curve
+type Point struct {
+	a int64
+	b int64
+	x int64
+	y int64
+}
+
 var ErrNotInRange = errors.New("num not in range")
 var ErrNotSameField = errors.New("cannot operate on elements from different fields")
 var ErrFailedToCreateSet = errors.New("failed to create set")
 var ErrDivisionByZero = errors.New("division by zero")
+var ErrPointNotInCurve = errors.New("point not in curve")
 
 // NewFieldElement creates a new field element in GF(p)
 func NewFieldElement(num, prime int64) (*FieldElement, error) {
@@ -222,6 +231,37 @@ func PrintSet(set []*FieldElement) {
 	fmt.Println("]")
 }
 
+// CreateEllipticPoint creates a new point on the Elliptic Curve y**2 = x**3 + ax + b
+func (p *Point) CreateEllipticPoint(y, x, a, b int64) (*Point, error) {
+	if PowInt(y, 2) != PowInt(x, 3)+(a*x)+b {
+		fmt.Println(PowInt(y, 2) != PowInt(x, 3)+(a*x)+b)
+		return nil, ErrPointNotInCurve
+	}
+
+	return &Point{
+		y: y,
+		x: x,
+		a: a,
+		b: b,
+	}, nil
+}
+
+// IsEqual Check if points are equal
+// Points are equal only if they're on the same curve and have same coordinates
+func (p *Point) IsEqual(other *Point) bool {
+	if other == nil {
+		return false
+	}
+	if p.y == other.y && p.x == other.x && p.a == other.a && p.b == other.b {
+		return true
+	}
+	return false
+}
+
+func (p *Point) String() string {
+	return fmt.Sprintf("(%v, %v): a-> %v, b-> %v", p.y, p.x, p.a, p.b)
+}
+
 // Additional utility functions:
 
 // Inverse finds the multiplicative inverse of the field element
@@ -257,4 +297,20 @@ func (f *FieldElement) MulIdentity() *FieldElement {
 		Num:   big.NewInt(1),
 		Prime: new(big.Int).Set(f.Prime),
 	}
+}
+
+// PowInt returns an int64 exponent result of y**x
+func PowInt(a, b int64) int64 {
+	var result int64 = 1
+
+	for 0 != b {
+		if 0 != (b & 1) {
+			result *= a
+
+		}
+		b >>= 1
+		a *= a
+	}
+
+	return result
 }
