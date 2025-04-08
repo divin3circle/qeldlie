@@ -14,10 +14,10 @@ type FieldElement struct {
 
 // Point represents a point on an elliptic curve
 type Point struct {
-	a int64
-	b int64
-	x int64
-	y int64
+	a *int64
+	b *int64
+	x *int64
+	y *int64
 }
 
 var ErrNotInRange = errors.New("num not in range")
@@ -25,6 +25,7 @@ var ErrNotSameField = errors.New("cannot operate on elements from different fiel
 var ErrFailedToCreateSet = errors.New("failed to create set")
 var ErrDivisionByZero = errors.New("division by zero")
 var ErrPointNotInCurve = errors.New("point not in curve")
+var ErrPointAtInfinity = errors.New("point at infinity")
 
 // NewFieldElement creates a new field element in GF(p)
 func NewFieldElement(num, prime int64) (*FieldElement, error) {
@@ -233,17 +234,44 @@ func PrintSet(set []*FieldElement) {
 
 // CreateEllipticPoint creates a new point on the Elliptic Curve y**2 = x**3 + ax + b
 func (p *Point) CreateEllipticPoint(y, x, a, b int64) (*Point, error) {
+	// don't check curve equation when we have the point at infinity
+	inf := p.isAtInfinity()
+	if inf {
+		return nil, ErrPointAtInfinity
+	}
 	if PowInt(y, 2) != PowInt(x, 3)+(a*x)+b {
-		fmt.Println(PowInt(y, 2) != PowInt(x, 3)+(a*x)+b)
 		return nil, ErrPointNotInCurve
 	}
-
 	return &Point{
-		y: y,
-		x: x,
-		a: a,
-		b: b,
+		y: &y,
+		x: &x,
+		a: &a,
+		b: &b,
 	}, nil
+}
+
+// AdditiveIdentity Performs an elliptic curve point addition for additive identity(vertical line)
+func (p *Point) AdditiveIdentity(other *Point) (*Point, error) {
+	if p.a != other.a || p.b != other.b {
+		return nil, ErrPointNotInCurve
+	}
+	if p.isAtInfinity() {
+		return other, nil
+	}
+	if other.isAtInfinity() {
+		return p, nil
+	}
+	// return a point at infinity where the two points are additive inverse
+	// i.e. have the same x but different y -> vertical line special case.
+	if p.x == other.x && p.y != other.y {
+		return &Point{
+			y: nil,
+			x: nil,
+			a: p.a,
+			b: p.b,
+		}, nil
+	}
+	return nil, ErrPointNotInCurve
 }
 
 // IsEqual Check if points are equal
@@ -256,6 +284,11 @@ func (p *Point) IsEqual(other *Point) bool {
 		return true
 	}
 	return false
+}
+
+// isAtInfinity Checks if a point is at infinity
+func (p *Point) isAtInfinity() bool {
+	return p.y == nil || p.x == nil
 }
 
 func (p *Point) String() string {
@@ -299,7 +332,7 @@ func (f *FieldElement) MulIdentity() *FieldElement {
 	}
 }
 
-// PowInt returns an int64 exponent result of y**x
+// PowInt returns an int64 exponent result of a ** b
 func PowInt(a, b int64) int64 {
 	var result int64 = 1
 
