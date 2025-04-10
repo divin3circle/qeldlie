@@ -272,7 +272,7 @@ func (p *Point) AdditiveIdentity(other *Point) (*Point, error) {
 			b: p.b,
 		}, nil
 	}
-
+	// points are not on the same vertical line
 	if *p.x != *other.x {
 		slope := (*other.y - *p.y) / (*other.x - *p.x)
 		x := PowInt(slope, 2) - *p.x - *other.x
@@ -284,6 +284,30 @@ func (p *Point) AdditiveIdentity(other *Point) (*Point, error) {
 			b: p.b,	
 		}, nil
 	}
+
+	// p1 = p2, tangent special case
+	if *p.x == *other.x {
+		slope := ((3 * PowInt(*p.x, 2)) + *p.a) / (2 * *p.y)
+		x := PowInt(slope, 2) - 2 * *p.x
+		y := slope*(*p.x-x) - *p.y
+		return &Point{
+			x: &x,
+			y: &y,
+			a: p.a,
+			b: p.b,
+		}, nil
+	}
+
+	// p1 = p2 & vertical tangent special case
+	if p.IsEqual(other) && *p.y == 0 * *p.x {
+		return &Point{
+			x: nil,
+			y: nil, 
+			a: p.a,
+			b: p.b,
+		}, nil
+	}
+
 	return nil, ErrAddingPoints
 }
 
@@ -293,7 +317,7 @@ func (p *Point) IsEqual(other *Point) bool {
 	if other == nil {
 		return false
 	}
-	if p.y == other.y && p.x == other.x && p.a == other.a && p.b == other.b {
+	if *p.y == *other.y && *p.x == *other.x && *p.a == *other.a && *p.b == *other.b {
 		return true
 	}
 	return false
