@@ -26,6 +26,7 @@ var ErrFailedToCreateSet = errors.New("failed to create set")
 var ErrDivisionByZero = errors.New("division by zero")
 var ErrPointNotInCurve = errors.New("point not in curve")
 var ErrPointAtInfinity = errors.New("point at infinity")
+var ErrAddingPoints = errors.New("adding points")
 
 // NewFieldElement creates a new field element in GF(p)
 func NewFieldElement(num, prime int64) (*FieldElement, error) {
@@ -233,12 +234,12 @@ func PrintSet(set []*FieldElement) {
 }
 
 // CreateEllipticPoint creates a new point on the Elliptic Curve y**2 = x**3 + ax + b
-func (p *Point) CreateEllipticPoint(y, x, a, b int64) (*Point, error) {
+func (p *Point) CreateEllipticPoint(x, y, a, b int64) (*Point, error) {
 	// don't check curve equation when we have the point at infinity
-	inf := p.isAtInfinity()
-	if inf {
-		return nil, ErrPointAtInfinity
-	}
+	//inf := p.isAtInfinity()
+	//if inf {
+	//	return nil, ErrPointAtInfinity
+	//}
 	if PowInt(y, 2) != PowInt(x, 3)+(a*x)+b {
 		return nil, ErrPointNotInCurve
 	}
@@ -252,7 +253,7 @@ func (p *Point) CreateEllipticPoint(y, x, a, b int64) (*Point, error) {
 
 // AdditiveIdentity Performs an elliptic curve point addition for additive identity(vertical line)
 func (p *Point) AdditiveIdentity(other *Point) (*Point, error) {
-	if p.a != other.a || p.b != other.b {
+	if *p.a != *other.a || *p.b != *other.b {
 		return nil, ErrPointNotInCurve
 	}
 	if p.isAtInfinity() {
@@ -263,7 +264,7 @@ func (p *Point) AdditiveIdentity(other *Point) (*Point, error) {
 	}
 	// return a point at infinity where the two points are additive inverse
 	// i.e. have the same x but different y -> vertical line special case.
-	if p.x == other.x && p.y != other.y {
+	if *p.x == *other.x && *p.y != *other.y {
 		return &Point{
 			y: nil,
 			x: nil,
@@ -271,7 +272,19 @@ func (p *Point) AdditiveIdentity(other *Point) (*Point, error) {
 			b: p.b,
 		}, nil
 	}
-	return nil, ErrPointNotInCurve
+
+	if *p.x != *other.x {
+		slope := (*other.y - *p.y) / (*other.x - *p.x)
+		x := PowInt(slope, 2) - *p.x - *other.x
+		y := slope*(*p.x-x) - *p.y
+		return &Point{
+			x: &x,
+			y: &y,
+			a: p.a,
+			b: p.b,	
+		}, nil
+	}
+	return nil, ErrAddingPoints
 }
 
 // IsEqual Check if points are equal
@@ -288,11 +301,17 @@ func (p *Point) IsEqual(other *Point) bool {
 
 // isAtInfinity Checks if a point is at infinity
 func (p *Point) isAtInfinity() bool {
-	return p.y == nil || p.x == nil
+	if p.x == nil || p.y == nil {
+		return true
+	}
+	return false
 }
 
 func (p *Point) String() string {
-	return fmt.Sprintf("(%v, %v): a-> %v, b-> %v", p.y, p.x, p.a, p.b)
+	if p.isAtInfinity() {
+		return "Point at Infinity"
+	}
+	return fmt.Sprintf("(%v, %v): a-> %v, b-> %v", *p.y, *p.x, *p.a, *p.b)
 }
 
 // Additional utility functions:
